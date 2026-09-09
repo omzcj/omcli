@@ -2,8 +2,8 @@
 
 set -u
 
-PROGRAM_NAME="codex-remote"
-PROGRAM_VERSION="2026.09.08.6"
+PROGRAM_NAME="omcli codex"
+PROGRAM_VERSION="@VERSION@"
 ENV_NAME="CODEX_APP_SERVER_USE_LOCAL_DAEMON"
 SPARKLE_ENV_NAME="CODEX_SPARKLE_ENABLED"
 INSTALL_URL="https://chatgpt.com/codex/install.sh"
@@ -203,6 +203,10 @@ find_managed_codex() {
 codex_version() {
   [ -n "${1:-}" ] && [ -x "$1" ] || return 1
   "$1" --version 2>/dev/null | /usr/bin/sed -n 's/^codex-cli[[:space:]]*//p' | /usr/bin/head -n 1
+}
+
+managed_codex() {
+  "$MANAGED_CODEX_BIN" "$@"
 }
 
 json_string_field() {
@@ -700,7 +704,7 @@ print_status() {
   if [ -n "$CHATGPT_PIDS" ]; then chatgpt_level=good; else chatgpt_level=warning; fi
   case "$DESKTOP_BACKEND" in managed-daemon) backend_level=good ;; inactive) backend_level=warning ;; *) backend_level=error ;; esac
 
-  print_status_field "codex-remote" "$PROGRAM_VERSION" neutral
+  print_status_field "$PROGRAM_NAME" "$PROGRAM_VERSION" neutral
   print_status_field "state" "$OVERALL_STATE" "$overall_level"
   print_status_field "Desktop version" "${CHATGPT_VERSION:-not installed}" neutral
   print_status_field "Desktop compatibility" "$DESKTOP_COMPATIBILITY" "$desktop_level"
@@ -973,18 +977,18 @@ start_managed_reuse() {
     log "managed daemon remote control is already active"
   else
     log "enabling managed daemon remote control"
-    "$MANAGED_CODEX_BIN" app-server daemon enable-remote-control || \
+    managed_codex app-server daemon enable-remote-control || \
       fail "failed to enable managed daemon remote control"
   fi
   case "$DAEMON_OWNERSHIP" in
     stopped|stale-socket)
       log "starting the managed daemon"
-      "$MANAGED_CODEX_BIN" app-server daemon start || fail "failed to start the managed daemon"
+      managed_codex app-server daemon start || fail "failed to start the managed daemon"
       ;;
     managed)
       if [ -n "$MANAGED_VERSION" ] && [ -n "$RUNNING_VERSION" ] && [ "$MANAGED_VERSION" != "$RUNNING_VERSION" ]; then
         log "restarting managed daemon $RUNNING_VERSION as $MANAGED_VERSION"
-        "$MANAGED_CODEX_BIN" app-server daemon restart || fail "failed to restart the managed daemon"
+        managed_codex app-server daemon restart || fail "failed to restart the managed daemon"
       else
         log "managed daemon is already current"
       fi
@@ -1006,7 +1010,7 @@ start_managed_reuse() {
   if ! wait_for_desktop_attach; then
     log "Desktop did not attach; retrying the managed runtime once"
     stop_chatgpt yes || fail "ChatGPT did not exit for the bounded attachment retry"
-    "$MANAGED_CODEX_BIN" app-server daemon restart || fail "failed to restart the managed daemon for attachment retry"
+    managed_codex app-server daemon restart || fail "failed to restart the managed daemon for attachment retry"
     enable_reuse
     open_chatgpt || fail "failed to reopen ChatGPT for attachment retry"
     wait_for_desktop_attach || fail "ChatGPT did not connect to the managed daemon after bounded retry"
@@ -1066,7 +1070,7 @@ command_stop() {
     managed|managed-unready)
       [ -n "$MANAGED_CODEX_BIN" ] || fail "managed Codex binary is unavailable"
       log "stopping the managed daemon"
-      if ! stop_output="$("$MANAGED_CODEX_BIN" app-server daemon stop 2>&1)"; then
+      if ! stop_output="$(managed_codex app-server daemon stop 2>&1)"; then
         printf '%s\n' "$stop_output" >&2
         collect_state
         if [ -z "$SERVER_PID" ] || \
@@ -1190,7 +1194,7 @@ command_update() {
   log "standalone Codex is $installed_version"
 }
 
-main() {
+codex_main() {
   init_colors
   command_name="${1:-status}"
   if [ "$#" -gt 0 ]; then shift; fi
@@ -1205,7 +1209,3 @@ main() {
     *) usage >&2; fail "unknown command: $command_name" ;;
   esac
 }
-
-if [ "${CODEX_REMOTE_SOURCE_ONLY:-0}" != "1" ]; then
-  main "$@"
-fi

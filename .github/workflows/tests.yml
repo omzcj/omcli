@@ -14,4 +14,4 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v5
-      - run: ./tests/test.sh
+      - run: make build && sh tests/test.sh
