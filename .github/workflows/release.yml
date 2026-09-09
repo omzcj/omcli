@@ -21,7 +21,7 @@ jobs:
   release:
     uses: omzcj/release-ci/.github/workflows/source-release.yml@9e6c5af26117fd344905d93a0e16be0bbf4e62c5
     with:
-      runner: macos-15
+      runner: macos-26
       project-name: omcli
       validate-command: make build && sh tests/test.sh
       package-paths: |

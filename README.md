@@ -9,6 +9,7 @@ omcli codex status
 ```
 
 Running `omcli` without arguments displays help and does not change the system.
+Only Apple Silicon Macs (`arm64`) running macOS are supported.
 
 ## Installation
 
