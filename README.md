@@ -5,6 +5,8 @@
 ```sh
 omcli lockscreen
 omcli ncdu
+omcli ncdu dump
+omcli ncdu read
 omcli codex status
 ```
 
@@ -20,8 +22,13 @@ brew install omzcj/omzcj/omcli
 ## Commands
 
 - `omcli lockscreen` immediately locks the macOS screen.
-- `omcli ncdu` scans the startup volume with `ncdu` and writes an export named
+- `omcli ncdu` and `omcli ncdu help` show the ncdu command help without
+  scanning the disk.
+- `omcli ncdu dump` scans the startup volume and writes an ncdu export named
   `~/.ncdu.<timestamp>`, excluding `System`, `Volumes`, and `~/.Trash`.
+- `omcli ncdu read [FILE]` opens an export with item counts and percentages.
+  When `FILE` is omitted, it selects the `~/.ncdu.<timestamp>` export with the
+  greatest numeric timestamp.
 - `omcli codex` is read-only and equivalent to `omcli codex status`.
 - `omcli codex start|stop|restart` manages ChatGPT Desktop reuse of the Codex
   managed app-server daemon.
@@ -30,6 +37,19 @@ brew install omzcj/omzcj/omcli
 
 The Codex integration preserves the existing `CODEX_REMOTE_*` environment
 overrides and the existing `~/.codex` runtime layout.
+
+For example:
+
+```sh
+omcli ncdu dump
+omcli ncdu read
+omcli ncdu read ~/.ncdu.1788940800
+```
+
+`omcli ncdu dump` prints the saved snapshot path followed by the elapsed time.
+Existing snapshots are not overwritten. `omcli ncdu read` only considers files
+whose names consist of `.ncdu.` followed by a numeric timestamp when selecting
+a snapshot automatically.
 
 ## License
 
@@ -45,9 +65,10 @@ make build
 sh tests/test.sh
 ```
 
-The test suite never invokes screen locking, disk scanning, or a real Codex
-lifecycle command. It uses source-only router tests with the external execution
-boundary replaced by mocks and default-deny guards around Codex system effects.
+The test suite never invokes screen locking, disk scanning, the ncdu interface,
+or a real Codex lifecycle command. It uses source-only router tests with the
+external execution boundary replaced by mocks and default-deny guards around
+Codex system effects.
 The lockscreen helper is compiled and inspected as a Mach-O binary but is never
 run.
 

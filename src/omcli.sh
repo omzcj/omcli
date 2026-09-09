@@ -7,7 +7,7 @@ Usage: omcli <command> [arguments]
 
 Commands:
   lockscreen             Lock the macOS screen immediately
-  ncdu                   Scan the startup volume and save an ncdu export
+  ncdu [command]         Create or read ncdu snapshots
   codex [command]        Manage ChatGPT Desktop reuse of the Codex daemon
   help                   Show this help
 
@@ -15,6 +15,7 @@ Options:
   -h, --help             Show this help
   -v, --version          Show the installed version
 
+Run "omcli ncdu help" for ncdu snapshot commands.
 Run "omcli codex help" for Codex daemon commands.
 EOF
 }
@@ -70,15 +71,88 @@ omcli_epoch() {
   /bin/date +%s
 }
 
-omcli_ncdu() {
+omcli_ncdu_usage() {
+  cat <<'EOF'
+Usage: omcli ncdu <command> [arguments]
+
+Create and read ncdu snapshots of the startup volume.
+Running without a command displays this help and does not scan the disk.
+
+Commands:
+  dump                   Scan the startup volume into ~/.ncdu.<timestamp>
+  read [FILE]            Open FILE, or the latest timestamped snapshot
+  help                   Show this help
+
+Options:
+  -h, --help             Show this help
+EOF
+}
+
+omcli_ncdu_dump() {
   [ "$#" -eq 0 ] || omcli_fail "ncdu does not accept arguments" || return
   omcli_has_ncdu || omcli_fail "ncdu is required" || return
   omcli_started="$(omcli_epoch)"
   omcli_output="$HOME/.ncdu.$omcli_started"
+  [ ! -e "$omcli_output" ] || omcli_fail "snapshot already exists: $omcli_output" || return
   omcli_run ncdu -0 -x -t 12 -O "$omcli_output" / \
-    --exclude System --exclude Volumes --exclude "$HOME/.Trash" || return $?
+    --exclude System --exclude Volumes --exclude "$HOME/.Trash" || {
+      omcli_status=$?
+      /bin/rm -f "$omcli_output"
+      return "$omcli_status"
+    }
   omcli_finished="$(omcli_epoch)"
+  printf 'snapshot: %s\n' "$omcli_output"
   printf 'expect:90s, actual: %ss\n' "$((omcli_finished - omcli_started))"
+}
+
+omcli_ncdu_latest_snapshot() {
+  omcli_latest_path=""
+  omcli_latest_epoch=""
+  omcli_snapshot_prefix="$HOME/.ncdu."
+
+  for omcli_candidate in "$HOME"/.ncdu.*; do
+    [ -f "$omcli_candidate" ] || continue
+    omcli_candidate_epoch="${omcli_candidate#"$omcli_snapshot_prefix"}"
+    case "$omcli_candidate_epoch" in
+      ''|*[!0-9]*) continue ;;
+    esac
+    if [ -z "$omcli_latest_epoch" ] || [ "$omcli_candidate_epoch" -gt "$omcli_latest_epoch" ]; then
+      omcli_latest_epoch="$omcli_candidate_epoch"
+      omcli_latest_path="$omcli_candidate"
+    fi
+  done
+
+  [ -n "$omcli_latest_path" ] || omcli_fail "no ncdu snapshots found in $HOME" || return
+  printf '%s\n' "$omcli_latest_path"
+}
+
+omcli_ncdu_read() {
+  [ "$#" -le 1 ] || omcli_fail "ncdu read accepts at most one file" || return
+  omcli_has_ncdu || omcli_fail "ncdu is required" || return
+
+  if [ "$#" -eq 1 ]; then
+    omcli_input="$1"
+  else
+    omcli_input="$(omcli_ncdu_latest_snapshot)" || return
+  fi
+
+  [ -f "$omcli_input" ] || omcli_fail "snapshot is not a file: $omcli_input" || return
+  [ -r "$omcli_input" ] || omcli_fail "snapshot is not readable: $omcli_input" || return
+  omcli_external ncdu -f "$omcli_input" --show-itemcount --show-percent
+}
+
+omcli_ncdu() {
+  omcli_ncdu_command="${1:-help}"
+  if [ "$#" -gt 0 ]; then shift; fi
+  case "$omcli_ncdu_command" in
+    help|-h|--help)
+      [ "$#" -eq 0 ] || omcli_fail "ncdu help does not accept arguments" || return
+      omcli_ncdu_usage
+      ;;
+    dump) omcli_ncdu_dump "$@" ;;
+    read) omcli_ncdu_read "$@" ;;
+    *) omcli_ncdu_usage >&2; omcli_fail "unknown ncdu command: $omcli_ncdu_command" ;;
+  esac
 }
 
 omcli_main() {
