@@ -11,7 +11,7 @@ sh -n src/omcli.sh
 sh -n bin/omcli
 
 expected_version="$(tr -d '\n' < VERSION)"
-[ "$expected_version" = "2026.09.09.2" ]
+[ "$expected_version" = "2026.09.10.1" ]
 grep -F 'PROGRAM_VERSION="@VERSION@"' src/codex.sh >/dev/null
 grep -F 'OMCLI_VERSION="@VERSION@"' src/omcli.sh >/dev/null
 if grep -F '@VERSION@' bin/omcli >/dev/null; then
@@ -44,6 +44,7 @@ lock_output="$(omcli_main lockscreen)"
 
 omcli_has_ncdu() { return 0; }
 omcli_epoch() { printf '1234567890\n'; }
+omcli_ncdu_threads() { printf '10\n'; }
 ncdu_test_home="$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/omcli-ncdu-test.XXXXXX")"
 trap 'rm -rf "$ncdu_test_home"' EXIT HUP INT TERM
 HOME="$ncdu_test_home"
@@ -58,7 +59,7 @@ done
 
 ncdu_output="$(omcli_main ncdu dump)"
 expected_ncdu_output="$(printf '%s\n' \
-  ncdu -0 -x -t 12 -O "$HOME/.ncdu.1234567890" / \
+  ncdu -0 -x -t 10 -O "$HOME/.ncdu.1234567890" / \
   --exclude System --exclude Volumes --exclude "$HOME/.Trash" \
   "snapshot: $HOME/.ncdu.1234567890" \
   'expect:90s, actual: 0s')"

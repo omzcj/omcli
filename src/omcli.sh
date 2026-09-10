@@ -71,6 +71,15 @@ omcli_epoch() {
   /bin/date +%s
 }
 
+omcli_ncdu_threads() {
+  omcli_detected_threads="$(/usr/sbin/sysctl -n hw.logicalcpu 2>/dev/null)" || \
+    omcli_detected_threads=1
+  case "$omcli_detected_threads" in
+    ''|0|*[!0-9]*) omcli_detected_threads=1 ;;
+  esac
+  printf '%s\n' "$omcli_detected_threads"
+}
+
 omcli_ncdu_usage() {
   cat <<'EOF'
 Usage: omcli ncdu <command> [arguments]
@@ -93,8 +102,9 @@ omcli_ncdu_dump() {
   omcli_has_ncdu || omcli_fail "ncdu is required" || return
   omcli_started="$(omcli_epoch)"
   omcli_output="$HOME/.ncdu.$omcli_started"
+  omcli_threads="$(omcli_ncdu_threads)"
   [ ! -e "$omcli_output" ] || omcli_fail "snapshot already exists: $omcli_output" || return
-  omcli_run ncdu -0 -x -t 12 -O "$omcli_output" / \
+  omcli_run ncdu -0 -x -t "$omcli_threads" -O "$omcli_output" / \
     --exclude System --exclude Volumes --exclude "$HOME/.Trash" || {
       omcli_status=$?
       /bin/rm -f "$omcli_output"

@@ -25,7 +25,9 @@ brew install omzcj/omzcj/omcli
 - `omcli ncdu` and `omcli ncdu help` show the ncdu command help without
   scanning the disk.
 - `omcli ncdu dump` scans the startup volume and writes an ncdu export named
-  `~/.ncdu.<timestamp>`, excluding `System`, `Volumes`, and `~/.Trash`.
+  `~/.ncdu.<timestamp>`, excluding `System`, `Volumes`, and `~/.Trash`. It uses
+  the device's logical CPU count reported by `sysctl hw.logicalcpu` as the ncdu
+  scan thread count.
 - `omcli ncdu read [FILE]` opens an export with item counts and percentages.
   When `FILE` is omitted, it selects the `~/.ncdu.<timestamp>` export with the
   greatest numeric timestamp.
