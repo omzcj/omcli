@@ -9,7 +9,7 @@ SPARKLE_ENV_NAME="CODEX_SPARKLE_ENABLED"
 INSTALL_URL="https://chatgpt.com/codex/install.sh"
 LATEST_RELEASE_URL="https://releases.openai.com/codex/channels/latest"
 SUPPORTED_DESKTOP_VERSION="26.818.61809"
-PINNED_DESKTOP_CASK="omzcj/omzcj/chatgpt"
+PINNED_DESKTOP_CASK="oh-my-brew/tap/chatgpt"
 
 CODEX_HOME_DIR="${CODEX_HOME:-$HOME/.codex}"
 CONTROL_DIR="$CODEX_HOME_DIR/app-server-control"

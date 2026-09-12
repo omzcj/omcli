@@ -9,6 +9,11 @@ on:
       - "src/**"
       - "tests/**"
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a new release instead of verifying only
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -19,8 +24,9 @@ concurrency:
 
 jobs:
   release:
-    uses: omzcj/release-ci/.github/workflows/source-release.yml@9e6c5af26117fd344905d93a0e16be0bbf4e62c5
+    uses: oh-my-infra/brew-ci/.github/workflows/source-release.yml@32680467a1ce87d778153ed08c38bd2577395c16
     with:
+      publish: ${{ github.event_name == 'push' || inputs.publish == true }}
       runner: macos-26
       project-name: omcli
       validate-command: make build && sh tests/test.sh

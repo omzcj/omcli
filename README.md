@@ -17,7 +17,7 @@ omcli xcodex
 ## 安装
 
 ```sh
-brew install omzcj/omzcj/omcli
+brew install oh-my-brew/tap/omcli
 ```
 
 ## 命令
@@ -55,8 +55,9 @@ omcli ncdu read ~/.ncdu.1788940800
   Codex。
 
 这组命令保留既有 `CODEX_REMOTE_*` 环境变量覆盖和 `~/.codex` 运行目录。
-它是此前解决多客户端 writer 冲突的兼容方案，目前暂时保留，待新的多设备流程
-稳定后退役；不要继续依赖它固定或降级 ChatGPT Desktop。
+它是此前解决多客户端 writer 冲突的兼容方案，现已不再作为日常入口，相关
+ChatGPT Cask 也不再维护。代码仅保留并随仓库迁移更新地址；不要继续依赖它
+固定或降级 ChatGPT Desktop。
 
 ### active writer 应急恢复
 
@@ -123,7 +124,12 @@ sh tests/test.sh
 ## 发布
 
 修改 `VERSION` 后推送到 `main`。Release workflow 会执行隔离测试，并将
-`omcli-VERSION.tar.gz` 发布到名为 `vVERSION` 的 GitHub Release。
+`omcli-VERSION.tar.gz` 发布到名为 `vVERSION` 的 GitHub Release。发布自动化
+使用 `oh-my-infra/brew-ci`，发布结果位于 `oh-my-brew/omcli`。
+
+手动运行 Release workflow 默认只验证和打包，不发布：`publish=false` 使用
+现有版本运行验证并检查两次打包结果一致，不修改 `VERSION` 或创建 tag/release。
+显式选择 `publish=true` 才会发布；现有 main 源码 push 仍按原规则自动发布。
 
 ## 许可证
 
