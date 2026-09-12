@@ -380,7 +380,7 @@ printf '%s\n' "$auto_update_error" | grep -F "failed to disable ChatGPT Desktop 
   require_macos() { :; }
   brew_available() { return 0; }
   desktop_cask_installed() { return 0; }
-  brew() { [ "$*" = "reinstall --cask omzcj/omzcj/chatgpt" ]; }
+  brew() { [ "$*" = "reinstall --cask oh-my-brew/tap/chatgpt" ]; }
   collect_state() {
     collect_count=$((collect_count + 1))
     if [ "$collect_count" -eq 1 ]; then
