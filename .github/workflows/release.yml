@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   release:
-    uses: oh-my-infra/brew-ci/.github/workflows/source-release.yml@dcb81d939fd62b8ce35f529ec7d321e85c34bf45
+    uses: oh-my-infra/brew-ci/.github/workflows/source-release.yml@32680467a1ce87d778153ed08c38bd2577395c16
     with:
       publish: ${{ github.event_name == 'push' || inputs.publish == true }}
       runner: macos-26
